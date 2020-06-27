@@ -8,13 +8,22 @@ use Loxodonta\CommandBus\Signature\CommandBusMiddlewareInterface;
 
 class SimpleMiddleware implements CommandBusMiddlewareInterface
 {
+    /**
+     * @var Spy
+     */
+    private Spy $spy;
+
+    public function __construct(Spy $spy)
+    {
+        $this->spy = $spy;
+    }
 
     /**
      * @inheritDoc
      */
     public function dispatch($command, callable $next)
     {
-        $command->var = sprintf('%s modified', $command->var);
+        $this->spy->report();
 
         return $next($command);
     }

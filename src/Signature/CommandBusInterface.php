@@ -33,7 +33,7 @@ interface CommandBusInterface
      * @return mixed
      * @throws CommandHasNoHandlerException
      */
-    public function dispatch($command);
+    public function dispatch(CommandInterface $command): CommandResponseInterface;
 
     /**
      * @param string $className

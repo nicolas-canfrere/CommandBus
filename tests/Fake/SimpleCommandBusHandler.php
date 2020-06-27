@@ -5,12 +5,14 @@ namespace Loxodonta\CommandBus\Tests\Fake;
 
 
 use Loxodonta\CommandBus\Signature\CommandBusHandlerInterface;
+use Loxodonta\CommandBus\CommandResponse;
+use Loxodonta\CommandBus\Signature\CommandResponseInterface;
 
 class SimpleCommandBusHandler implements CommandBusHandlerInterface
 {
-    public function __invoke(SimpleCommand $command)
+    public function __invoke(SimpleCommand $command): CommandResponseInterface
     {
-        return $this->listenTo();
+        return new CommandResponse($this->listenTo(), [new \stdClass()]);
     }
 
     /**

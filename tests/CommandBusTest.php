@@ -15,6 +15,7 @@ use Loxodonta\CommandBus\Tests\Fake\NotCallableBusHandler;
 use Loxodonta\CommandBus\Tests\Fake\SimpleCommand;
 use Loxodonta\CommandBus\Tests\Fake\SimpleCommandBusHandler;
 use Loxodonta\CommandBus\Tests\Fake\SimpleMiddleware;
+use Loxodonta\CommandBus\Tests\Fake\Spy;
 use PHPUnit\Framework\TestCase;
 
 class CommandBusTest extends TestCase
@@ -68,7 +69,7 @@ class CommandBusTest extends TestCase
 
         $result = $cb->dispatch(new SimpleCommand());
 
-        $this->assertEquals(SimpleCommand::class, $result);
+        $this->assertEquals(SimpleCommand::class, $result->getValue());
     }
 
     /**
@@ -101,22 +102,20 @@ class CommandBusTest extends TestCase
     public function withOneMiddleware()
     {
         $cb = new CommandBus();
-        $mw = new SimpleMiddleware();
+        $spy = $this->mockMiddlewareSpy();
+        $spy->expects($this->atLeastOnce())->method('report');
+        $mw = new SimpleMiddleware($spy);
         $handler = new SimpleCommandBusHandler();
 
         $cb->registerMiddleware($mw);
         $cb->registerHandler($handler);
 
         $command = new SimpleCommand();
-        $initial = $command->var;
+
 
         $result = $cb->dispatch($command);
 
-        $this->assertEquals(SimpleCommand::class, $result);
-
-        // for test only, middlewares are not suppose to alter the command object !
-
-        $this->assertEquals(sprintf('%s modified', $initial), $command->var);
+        $this->assertEquals(SimpleCommand::class, $result->getValue());
     }
 
     /**
@@ -125,26 +124,31 @@ class CommandBusTest extends TestCase
     public function withMultipleMiddlewares()
     {
         $cb = new CommandBus();
-        $amw = new AnotherMiddleware();
-        $mw = new SimpleMiddleware();
+
+        $spyOne = $this->mockMiddlewareSpy();
+        $spyOne->expects($this->once())->method('report');
+        $mw = new SimpleMiddleware($spyOne);
+
+        $spyTwo = $this->mockMiddlewareSpy();
+        $spyTwo->expects($this->exactly(2))->method('report');
+        $amw = new AnotherMiddleware($spyTwo);
+
         $handler = new SimpleCommandBusHandler();
 
-        $cb->registerMiddleware($amw);
-        $cb->registerMiddleware($mw);
+        $cb->registerMiddleware($amw)->registerMiddleware($mw);
         $cb->registerHandler($handler);
 
         $command = new SimpleCommand();
-        $initial = $command->var;
-
         $result = $cb->dispatch($command);
 
-        $this->assertEquals(SimpleCommand::class, $result);
+        $this->assertEquals(SimpleCommand::class, $result->getValue());
 
-        $expected = sprintf(
-            '%s and modified again and again',
-            sprintf('%s modified', $initial)
-        );
+    }
 
-        $this->assertEquals($expected, $command->var);
+    private function mockMiddlewareSpy()
+    {
+        return
+            $this->getMockBuilder(Spy::class)
+            ->onlyMethods(['report'])->getMock();
     }
 }

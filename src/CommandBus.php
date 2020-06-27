@@ -7,6 +7,8 @@ use Loxodonta\CommandBus\Exception\CommandHasNoHandlerException;
 use Loxodonta\CommandBus\Signature\CommandBusInterface;
 use Loxodonta\CommandBus\Signature\CommandBusHandlerInterface;
 use Loxodonta\CommandBus\Signature\CommandBusMiddlewareInterface;
+use Loxodonta\CommandBus\Signature\CommandInterface;
+use Loxodonta\CommandBus\Signature\CommandResponseInterface;
 
 /**
  * Class CommandBus
@@ -46,7 +48,7 @@ class CommandBus implements CommandBusInterface
     /**
      * @inheritDoc
      */
-    public function dispatch($command)
+    public function dispatch(CommandInterface $command): CommandResponseInterface
     {
         $key = get_class($command);
         if ($this->hasHandlerFor($key)) {
